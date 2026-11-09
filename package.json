@@ -1,0 +1,25 @@
+{
+  "name": "novel-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "小说创作与拆文工作台 - Web 端一体化创作平台",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.14.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:server": "pnpm --filter @novel-workbench/server dev",
+    "dev:client": "pnpm --filter @novel-workbench/client dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  }
+}
