@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore, type ModuleId } from './stores/app';
 import { fetchHealth, fetchDbHealth } from './lib/api';
+import { RuntimePanel } from './features/runtime/RuntimePanel';
 
 interface NavItem {
   id: ModuleId;
@@ -154,7 +155,13 @@ export default function App() {
         </header>
 
         <main className="content">
-          {activeModule === 'workspace' ? <Dashboard /> : <ModulePlaceholder module={activeModule} />}
+          {activeModule === 'workspace' ? (
+            <Dashboard />
+          ) : activeModule === 'runtime' ? (
+            <RuntimePanel />
+          ) : (
+            <ModulePlaceholder module={activeModule} />
+          )}
         </main>
       </div>
     </div>

@@ -2,11 +2,10 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import type { AppDeps } from './types.js';
 import { initSSE } from './sse.js';
+import { registerRuntimeRoutes } from './api/runtimes.routes.js';
 
 /**
  * 构建 Fastify 应用实例，注册插件与路由。
- * M1 阶段仅包含健康检查、数据库状态与 SSE 通道演示端点；
- * 后续里程碑将按领域拆分路由文件。
  */
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const { db, config } = deps;
@@ -47,6 +46,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       }
     }, 1000);
   });
+
+  // AI Agent Runtime 抽象层路由（M2）
+  await registerRuntimeRoutes(app);
 
   return app;
 }
