@@ -1401,3 +1401,148 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   M5 增强能力
+   ============================================================ */
+.runtime-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-width: 420px;
+}
+
+.runtime-picker .input {
+  flex: 1;
+  padding: 7px 12px;
+  font-size: 12.5px;
+}
+
+.review-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.review-head h3 {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.review-items {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.6;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.review-item:hover {
+  border-color: var(--border-strong);
+}
+
+.review-item.checked {
+  border-color: var(--border-accent);
+  background: var(--accent-soft);
+}
+
+.review-item input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.draft-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.draft-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.add-form {
+  flex-wrap: wrap;
+}
+
+.add-form .input {
+  min-width: 180px;
+}
+
+.knowledge-panel {
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.knowledge-hits {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.hit-row {
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hit-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 550;
+}
+
+.hit-title svg {
+  color: var(--accent-hover);
+}
+
+.hit-row .muted {
+  font-size: 12.5px;
+  line-height: 1.6;
+}

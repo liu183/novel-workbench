@@ -58,6 +58,7 @@ export async function addRuntime(input: {
   name: string;
   baseUrl: string;
   provider?: string;
+  apiKey?: string;
 }): Promise<{ ok: boolean; runtime?: AgentRuntimeInfo; error?: string }> {
   const res = await fetch('/api/runtimes', {
     method: 'POST',
@@ -355,4 +356,127 @@ export async function convertReport(
     body: '{}',
   });
   return res.json();
+}
+
+// ===== M5 增强能力 =====
+
+export async function fetchCapableRuntimes(): Promise<{
+  capable: AgentRuntimeInfo[];
+  preferredId: string | null;
+}> {
+  const res = await fetch('/api/runtimes/capable');
+  return res.json();
+}
+
+export async function deleteRuntime(id: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`/api/runtimes/${id}`, { method: 'DELETE' });
+  return res.json();
+}
+
+// --- 审稿 / 修稿 ---
+
+export interface ReviewItem {
+  id: string;
+  text: string;
+  checked: boolean;
+}
+
+export interface ReviewRecord {
+  id: string;
+  chapterId: string;
+  items: ReviewItem[];
+  createdAt: number;
+}
+
+export async function reviewChapter(
+  chapterId: string,
+  runtimeId?: string,
+): Promise<{ ok: boolean; record?: ReviewRecord; error?: string }> {
+  const res = await fetch(`/api/chapters/${chapterId}/review`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ runtimeId }),
+  });
+  return res.json();
+}
+
+export async function fetchReviews(chapterId: string): Promise<ReviewRecord[]> {
+  const res = await fetch(`/api/chapters/${chapterId}/reviews`);
+  return (await res.json()).reviews;
+}
+
+export async function reviseChapter(
+  chapterId: string,
+  selectedTexts: string[],
+  reviewId?: string,
+  runtimeId?: string,
+): Promise<{ ok: boolean; content?: string; version?: number; error?: string }> {
+  const res = await fetch(`/api/chapters/${chapterId}/revise`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selectedTexts, reviewId, runtimeId }),
+  });
+  return res.json();
+}
+
+export async function fetchDrafts(chapterId: string): Promise<
+  Array<{ id: string; version: number; kind: string; content: string; createdAt: number }>
+> {
+  const res = await fetch(`/api/chapters/${chapterId}/drafts`);
+  return (await res.json()).drafts;
+}
+
+// --- 导出 ---
+
+export async function exportNovel(
+  novelId: string,
+  format: 'md' | 'txt',
+): Promise<{ ok: boolean; filename?: string; content?: string; mime?: string; error?: string }> {
+  const res = await fetch(`/api/novels/${novelId}/export?format=${format}`);
+  return res.json();
+}
+
+// --- 知识库 ---
+
+export interface KnowledgeDoc {
+  id: string;
+  novelId?: string;
+  title: string;
+  chars: number;
+  createdAt: number;
+}
+
+export interface KnowledgeHit {
+  id: string;
+  title: string;
+  excerpt: string;
+  matches: number;
+}
+
+export async function fetchKnowledgeDocs(): Promise<KnowledgeDoc[]> {
+  const res = await fetch('/api/knowledge/docs');
+  return (await res.json()).docs;
+}
+
+export async function createKnowledgeDoc(input: {
+  title: string;
+  content: string;
+  novelId?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch('/api/knowledge/docs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return res.json();
+}
+
+export async function deleteKnowledgeDoc(id: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`/api/knowledge/docs/${id}`, { method: 'DELETE' });
+  return res.json();
+}
+
+export async function searchKnowledge(q: string): Promise<KnowledgeHit[]> {
+  const res = await fetch(`/api/knowledge/search?q=${encodeURIComponent(q)}`);
+  return (await res.json()).hits;
 }

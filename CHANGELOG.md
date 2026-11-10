@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-10
+
+### Added
+
+- **M5 增强能力**：
+  - 远程 Runtime 持久化：手动添加的服务落 SQLite，重启自动恢复；支持 apiKey（仅服务端保存）与删除。
+  - 服务启动自动扫描本机 Runtime，Agent CLI 无需手动点击即可参与 AI 任务。
+  - Agent CLI Provider：通过子进程调用 codex / claude / gemini / opencode 等 CLI 生成文本，统一纳入 `AgentRuntime` 接口。
+  - 统一 Runtime 工厂（`selectRuntime` / `createRuntime`）：写稿、审稿、拆文 AI 增强均支持 llm / remote / agent-cli 三类。
+  - 审稿 / 修稿：AI 逐条列出意见、勾选后生成新稿、旧稿自动归档为版本历史。
+  - 导出：整部作品导出 Markdown / TXT（浏览器下载）。
+  - 知识库：参考资料导入、本地全文检索、删除。
+  - 前端：创作工作台新增 Runtime 选择器 / 导出 / 审稿修稿面板；AI 运行时面板支持 API Key 与删除；知识库面板替换占位。
+- 单元测试：审稿意见解析、导出、知识库检索、Runtime 持久化恢复（累计 16 例）。
+
+### Changed
+
+- 拆文 AI 增强仅对 HTTP 型 Runtime 自动启用，避免 CLI 子进程拖慢毫秒级分析。
+
 ## [0.4.0] - 2026-11-10
 
 ### Added

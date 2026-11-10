@@ -1,10 +1,6 @@
 import { getChapter, updateChapter, type Chapter } from './chapter.service.js';
 import { getNovel, type Novel } from './novel.service.js';
-import {
-  registry,
-  OpenAICompatRuntime,
-  type AgentRuntimeInfo,
-} from '../runtime/index.js';
+import { selectRuntime, createRuntime, type AgentRuntimeInfo } from '../runtime/index.js';
 
 export interface WriteResult {
   content: string;
@@ -12,18 +8,9 @@ export interface WriteResult {
   model: string;
 }
 
-/** 选择可用的写稿 Runtime（llm 或 remote，且有 baseUrl）。 */
+/** 选择可用的写稿 Runtime（llm / remote / agent-cli 均可）。 */
 export function selectWritableRuntime(runtimeId?: string): AgentRuntimeInfo | undefined {
-  const writable = registry
-    .list()
-    .filter(
-      (r) =>
-        (r.type === 'llm' || r.type === 'remote') &&
-        r.status === 'available' &&
-        r.baseUrl,
-    );
-  if (writable.length === 0) return undefined;
-  return writable.find((r) => r.id === runtimeId) ?? writable[0];
+  return selectRuntime(runtimeId);
 }
 
 /** 写稿：组装 prompt → 调用 Runtime → 保存正文。 */
@@ -35,19 +22,11 @@ export async function writeChapter(chapterId: string, runtimeId?: string): Promi
 
   const target = selectWritableRuntime(runtimeId);
   if (!target) {
-    throw new Error('没有可用的模型服务，请先在「AI 运行时」添加远程服务或启动本地模型');
+    throw new Error('没有可用的 AI 运行时，请先在「AI 运行时」扫描本机 Agent CLI 或添加远程服务');
   }
 
   const prompt = buildPrompt(novel, chapter);
-
-  const runtime = new OpenAICompatRuntime({
-    id: target.id,
-    name: target.name,
-    type: 'llm',
-    provider: target.provider,
-    baseUrl: target.baseUrl!,
-    capabilities: target.capabilities,
-  });
+  const runtime = createRuntime(target);
 
   const resp = await runtime.chat({
     messages: [{ role: 'user', content: prompt }],
@@ -57,16 +36,17 @@ export async function writeChapter(chapterId: string, runtimeId?: string): Promi
   });
 
   const content = resp.content.trim();
+  if (!content) throw new Error('AI 未返回正文内容');
   updateChapter(chapterId, { content, status: 'draft' });
 
   return {
     content,
     runtimeName: target.name,
-    model: resp.model || target.models[0] || '',
+    model: resp.model || target.provider,
   };
 }
 
-function buildPrompt(novel: Novel, chapter: Chapter): string {
+export function buildPrompt(novel: Novel, chapter: Chapter): string {
   const lines = [
     '你是一位网络小说作家，请根据以下设定撰写本章正文，直接输出正文内容，不要任何解释或标题。',
     '',

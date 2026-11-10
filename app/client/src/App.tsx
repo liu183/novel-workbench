@@ -13,6 +13,7 @@ import { RuntimePanel } from './features/runtime/RuntimePanel';
 import { WorkspacePanel } from './features/workspace/WorkspacePanel';
 import { WritingPanel } from './features/writing/WritingPanel';
 import { DeconstructPanel } from './features/deconstruct/DeconstructPanel';
+import { KnowledgePanel } from './features/knowledge/KnowledgePanel';
 
 interface NavItem {
   id: ModuleId;
@@ -73,6 +74,8 @@ export default function App() {
         return <WritingPanel />;
       case 'deconstruct':
         return <DeconstructPanel />;
+      case 'knowledge':
+        return <KnowledgePanel />;
       default:
         return <ModulePlaceholder module={activeModule} />;
     }
@@ -111,7 +114,7 @@ export default function App() {
 
         <div className="sidebar-footer">
           <Sparkles size={13} />
-          v0.4.0 · M4 拆文工作台
+          v0.5.0 · M5 增强能力
         </div>
       </aside>
 

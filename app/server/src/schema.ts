@@ -76,5 +76,49 @@ export function initSchema(db: SqliteDatabase): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_report_source ON deconstruct_report(source_id);
+
+    -- 手动添加的 Agent Runtime（持久化，重启不丢失）
+    CREATE TABLE IF NOT EXISTS runtime (
+      id            TEXT PRIMARY KEY,
+      name          TEXT,
+      type          TEXT,
+      provider      TEXT,
+      base_url      TEXT,
+      capabilities  TEXT,
+      status        TEXT,
+      config        TEXT,
+      created_at    INTEGER
+    );
+
+    -- 章节稿件版本历史
+    CREATE TABLE IF NOT EXISTS draft (
+      id          TEXT PRIMARY KEY,
+      chapter_id  TEXT,
+      version     INTEGER,
+      kind        TEXT,
+      content     TEXT,
+      created_at  INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_draft_chapter ON draft(chapter_id, version);
+
+    -- 审稿意见
+    CREATE TABLE IF NOT EXISTS review (
+      id          TEXT PRIMARY KEY,
+      chapter_id  TEXT,
+      items       TEXT,
+      created_at  INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_review_chapter ON review(chapter_id);
+
+    -- 知识库文档
+    CREATE TABLE IF NOT EXISTS knowledge_doc (
+      id          TEXT PRIMARY KEY,
+      novel_id    TEXT,
+      title       TEXT,
+      content     TEXT,
+      created_at  INTEGER
+    );
   `);
 }

@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, RefreshCw, Cpu, Terminal, Server, Bot } from 'lucide-react';
+import { Plus, RefreshCw, Cpu, Terminal, Server, Bot, Trash2 } from 'lucide-react';
 import {
   fetchRuntimes,
   scanRuntimes,
   addRuntime,
+  deleteRuntime,
   type AgentRuntimeInfo,
   type RuntimeStatus,
   type RuntimeType,
@@ -39,7 +40,13 @@ const CAPABILITY_LABEL: Record<string, string> = {
   embedding: '向量',
 };
 
-function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
+function RuntimeCard({
+  runtime,
+  onDelete,
+}: {
+  runtime: AgentRuntimeInfo;
+  onDelete: (id: string) => void;
+}) {
   const status = STATUS_META[runtime.status] ?? STATUS_META.error;
   const Icon = TYPE_ICON[runtime.type] ?? Bot;
 
@@ -52,7 +59,18 @@ function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
           </span>
           {runtime.name}
         </div>
-        <span className={`badge ${status.className}`}>{status.label}</span>
+        <div className="toolbar-actions">
+          {runtime.id.startsWith('remote-') && (
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => onDelete(runtime.id)}
+              title="删除该远程服务"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
+          <span className={`badge ${status.className}`}>{status.label}</span>
+        </div>
       </div>
 
       <div className="runtime-meta">
@@ -112,8 +130,15 @@ export function RuntimePanel() {
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    await deleteRuntime(id);
+    setMessage('已删除远程服务');
+    await qc.invalidateQueries({ queryKey: ['runtimes'] });
+  };
 
   const handleScan = async () => {
     setScanning(true);
@@ -134,11 +159,12 @@ export function RuntimePanel() {
     setAdding(true);
     setMessage(null);
     try {
-      const res = await addRuntime({ name, baseUrl });
+      const res = await addRuntime({ name, baseUrl, apiKey: apiKey || undefined });
       if (res.ok) {
-        setMessage(`已添加「${name}」`);
+        setMessage(`已添加「${name}」（持久化保存）`);
         setName('');
         setBaseUrl('');
+        setApiKey('');
         setShowAdd(false);
       } else {
         setMessage(res.error ?? '添加失败');
@@ -186,6 +212,13 @@ export function RuntimePanel() {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
           />
+          <input
+            className="input"
+            type="password"
+            placeholder="API Key（选填，仅服务端保存）"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+          />
           <button className="btn" type="submit" disabled={adding || !name || !baseUrl}>
             {adding ? '添加中…' : '添加'}
           </button>
@@ -204,7 +237,7 @@ export function RuntimePanel() {
       ) : (
         <div className="runtime-grid">
           {runtimes.map((r) => (
-            <RuntimeCard key={r.id} runtime={r} />
+            <RuntimeCard key={r.id} runtime={r} onDelete={handleDelete} />
           ))}
         </div>
       )}

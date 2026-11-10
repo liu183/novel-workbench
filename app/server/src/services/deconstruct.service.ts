@@ -3,7 +3,7 @@ import { getDb } from '../db.js';
 import { getSourceRecord, getSourceText } from './books.service.js';
 import { analyzeText, type AnalysisResult } from './analyzer.js';
 import { createNovel, type Novel } from './novel.service.js';
-import { registry, OpenAICompatRuntime } from '../runtime/index.js';
+import { selectRuntime, createRuntime } from '../runtime/index.js';
 
 export interface DeconstructReport {
   id: string;
@@ -47,29 +47,17 @@ export async function analyzeSource(sourceId: string): Promise<DeconstructReport
   return report;
 }
 
-/** 有可用 llm/remote Runtime 时，叠加一段 AI 文风分析；失败静默降级。 */
+/**
+ * 有 HTTP 型 Runtime 时叠加一段 AI 文风分析；失败静默降级为纯本地统计。
+ * 注意：不自动调用 Agent CLI（子进程耗时较长），避免拖慢拆文分析。
+ */
 async function maybeAiSummary(text: string, title: string): Promise<string | undefined> {
-  const writable = registry
-    .list()
-    .filter(
-      (r) =>
-        (r.type === 'llm' || r.type === 'remote') &&
-        r.status === 'available' &&
-        r.baseUrl,
-    );
-  if (writable.length === 0) return undefined;
+  const target = selectRuntime();
+  if (!target || target.type === 'agent-cli') return undefined;
 
-  const target = writable[0];
   try {
-    const runtime = new OpenAICompatRuntime({
-      id: target.id,
-      name: target.name,
-      type: 'llm',
-      provider: target.provider,
-      baseUrl: target.baseUrl!,
-      capabilities: target.capabilities,
-    });
-    const excerpt = text.slice(0, 3000);
+    const runtime = createRuntime(target);
+    const excerpt = text.slice(0, 2000);
     const resp = await runtime.chat({
       messages: [
         {

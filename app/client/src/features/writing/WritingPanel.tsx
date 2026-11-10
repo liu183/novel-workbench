@@ -1,13 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Sparkles, PenLine } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Sparkles,
+  PenLine,
+  Download,
+} from 'lucide-react';
 import {
   fetchNovel,
   fetchChapters,
   createChapter,
   streamWriteChapter,
+  fetchCapableRuntimes,
+  exportNovel,
 } from '../../lib/api';
 import { useAppStore } from '../../stores/app';
+import { ReviewPanel } from './ReviewPanel';
 
 export function WritingPanel() {
   const currentNovelId = useAppStore((s) => s.currentNovelId);
@@ -24,9 +33,11 @@ export function WritingPanel() {
     queryFn: () => fetchChapters(currentNovelId!),
     enabled: !!currentNovelId,
   });
+  const capable = useQuery({ queryKey: ['capableRuntimes'], queryFn: fetchCapableRuntimes });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAddChapter, setShowAddChapter] = useState(false);
+  const [runtimeId, setRuntimeId] = useState<string>('');
 
   const [title, setTitle] = useState('');
   const [goal, setGoal] = useState('');
@@ -54,6 +65,7 @@ export function WritingPanel() {
   }
 
   const selected = chapters.find((c) => c.id === selectedId) ?? null;
+  const effectiveRuntimeId = runtimeId || capable.data?.preferredId || undefined;
 
   const selectChapter = (id: string) => {
     setSelectedId(id);
@@ -81,7 +93,7 @@ export function WritingPanel() {
     setWriteMsg('');
 
     try {
-      await streamWriteChapter(selected.id, undefined, (e) => {
+      await streamWriteChapter(selected.id, effectiveRuntimeId, (e) => {
         if (e.type === 'start') setWriteMsg(e.message ?? '');
         else if (e.type === 'delta') setStreamContent((prev) => prev + (e.content ?? ''));
         else if (e.type === 'done') setWriteMsg(`写稿完成 · ${e.runtimeName ?? ''} ${e.model ?? ''}`);
@@ -95,6 +107,26 @@ export function WritingPanel() {
     }
   };
 
+  const handleExport = async (format: 'md' | 'txt') => {
+    const res = await exportNovel(novel.id, format);
+    if (!res.ok || !res.content) {
+      setWriteMsg(res.error ?? '导出失败');
+      return;
+    }
+    const blob = new Blob([res.content], { type: res.mime ?? 'text/plain; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.filename ?? `novel.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const refreshChapter = async () => {
+    await qc.invalidateQueries({ queryKey: ['chapters', novel.id] });
+    setStreamContent('');
+  };
+
   return (
     <div className="writing-panel">
       <div className="panel-toolbar">
@@ -105,10 +137,39 @@ export function WritingPanel() {
             {novel.premise ? ` · ${novel.premise}` : ''}
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={() => setActiveModule('workspace')}>
-          <ArrowLeft size={15} />
-          返回工作区
-        </button>
+        <div className="toolbar-actions">
+          <button className="btn btn-ghost btn-sm" onClick={() => handleExport('md')}>
+            <Download size={14} />
+            Markdown
+          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => handleExport('txt')}>
+            <Download size={14} />
+            TXT
+          </button>
+          <button className="btn btn-ghost" onClick={() => setActiveModule('workspace')}>
+            <ArrowLeft size={15} />
+            返回工作区
+          </button>
+        </div>
+      </div>
+
+      <div className="runtime-picker">
+        <span className="muted">AI 运行时</span>
+        <select
+          className="input"
+          value={runtimeId || capable.data?.preferredId || ''}
+          onChange={(e) => setRuntimeId(e.target.value)}
+        >
+          {(capable.data?.capable ?? []).length === 0 ? (
+            <option value="">无可用运行时（请到 AI 运行时配置）</option>
+          ) : (
+            (capable.data?.capable ?? []).map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} · {r.type === 'agent-cli' ? 'CLI' : r.type}
+              </option>
+            ))
+          )}
+        </select>
       </div>
 
       <div className="writing-layout">
@@ -194,6 +255,12 @@ export function WritingPanel() {
                   <p className="muted">完善上方蓝图后，点击「AI 写稿」生成正文</p>
                 )}
               </div>
+
+              <ReviewPanel
+                chapterId={selected.id}
+                runtimeId={effectiveRuntimeId}
+                onRevised={refreshChapter}
+              />
             </>
           )}
         </div>
