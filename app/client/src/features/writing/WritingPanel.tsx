@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Plus, Sparkles, PenLine } from 'lucide-react';
 import {
   fetchNovel,
   fetchChapters,
@@ -40,8 +41,12 @@ export function WritingPanel() {
   if (!currentNovelId || !novel) {
     return (
       <div className="empty">
-        <p>未选择作品，请先在工作区选择或创建作品。</p>
+        <div className="empty-icon">
+          <PenLine />
+        </div>
+        <p className="muted">未选择作品，请先在工作区选择或创建作品。</p>
         <button className="btn" onClick={() => setActiveModule('workspace')}>
+          <ArrowLeft size={15} />
           前往工作区
         </button>
       </div>
@@ -92,7 +97,7 @@ export function WritingPanel() {
 
   return (
     <div className="writing-panel">
-      <div className="runtime-toolbar">
+      <div className="panel-toolbar">
         <div>
           <h2>{novel.title}</h2>
           <p className="muted">
@@ -101,16 +106,18 @@ export function WritingPanel() {
           </p>
         </div>
         <button className="btn btn-ghost" onClick={() => setActiveModule('workspace')}>
+          <ArrowLeft size={15} />
           返回工作区
         </button>
       </div>
 
       <div className="writing-layout">
-        <aside className="chapter-list card">
+        <aside className="card chapter-list">
           <div className="chapter-list-head">
             <span>章节</span>
-            <button className="btn btn-sm" onClick={() => setShowAddChapter((v) => !v)}>
-              {showAddChapter ? '收起' : '+ 章节'}
+            <button className="btn btn-sm btn-ghost" onClick={() => setShowAddChapter((v) => !v)}>
+              <Plus size={14} />
+              章节
             </button>
           </div>
 
@@ -122,7 +129,7 @@ export function WritingPanel() {
               <input className="input" placeholder="悬念钩子" value={hook} onChange={(e) => setHook(e.target.value)} />
               <input className="input" placeholder="出场人物" value={cast} onChange={(e) => setCast(e.target.value)} />
               <button className="btn btn-sm" type="submit">
-                创建
+                创建章节
               </button>
             </form>
           )}
@@ -145,29 +152,35 @@ export function WritingPanel() {
 
         <div className="editor-area">
           {!selected ? (
-            <div className="empty">选择左侧章节开始创作</div>
+            <div className="empty">
+              <div className="empty-icon">
+                <PenLine />
+              </div>
+              <p className="muted">选择左侧章节开始创作</p>
+            </div>
           ) : (
             <>
               <div className="card blueprint">
                 <div className="blueprint-grid">
                   <div>
-                    <span className="muted">主角小目标</span>
-                    <div>{selected.goal || '—'}</div>
+                    <span className="bp-label">主角小目标</span>
+                    <div className="bp-value">{selected.goal || '—'}</div>
                   </div>
                   <div>
-                    <span className="muted">冲突与转折</span>
-                    <div>{selected.conflict || '—'}</div>
+                    <span className="bp-label">冲突与转折</span>
+                    <div className="bp-value">{selected.conflict || '—'}</div>
                   </div>
                   <div>
-                    <span className="muted">悬念钩子</span>
-                    <div>{selected.hook || '—'}</div>
+                    <span className="bp-label">悬念钩子</span>
+                    <div className="bp-value">{selected.hook || '—'}</div>
                   </div>
                   <div>
-                    <span className="muted">出场人物</span>
-                    <div>{selected.cast || '—'}</div>
+                    <span className="bp-label">出场人物</span>
+                    <div className="bp-value">{selected.cast || '—'}</div>
                   </div>
                 </div>
                 <button className="btn" onClick={handleWrite} disabled={writing}>
+                  <Sparkles size={15} />
                   {writing ? '写稿中…' : 'AI 写稿'}
                 </button>
               </div>

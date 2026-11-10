@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Clock, Library } from 'lucide-react';
 import { fetchNovels, createNovel, fetchHealth, fetchDbHealth, type Novel } from '../../lib/api';
 import { useAppStore } from '../../stores/app';
 
@@ -8,11 +9,14 @@ function NovelCard({ novel, onOpen }: { novel: Novel; onOpen: () => void }) {
   return (
     <button className="card novel-card" onClick={onOpen}>
       <div className="novel-card-title">{novel.title}</div>
-      <div className="novel-card-meta muted">
+      <div className="novel-card-meta">
         {novel.genre ?? '未分类'} · 每章 {novel.wordsPerChapter ?? 2000} 字
       </div>
-      {novel.premise && <div className="novel-card-premise muted">{novel.premise}</div>}
-      <div className="novel-card-footer muted">更新于 {date}</div>
+      {novel.premise && <div className="novel-card-premise">{novel.premise}</div>}
+      <div className="novel-card-footer">
+        <Clock size={12} />
+        更新于 {date}
+      </div>
     </button>
   );
 }
@@ -58,21 +62,23 @@ export function WorkspacePanel() {
 
   return (
     <div className="workspace-panel">
-      <div className="runtime-toolbar">
+      <div className="panel-toolbar">
         <div>
           <h2>工作区</h2>
           <p className="muted">管理你的全部作品</p>
         </div>
         <button className="btn" onClick={() => setShowAdd((v) => !v)}>
-          {showAdd ? '取消' : '新建作品'}
+          <Plus size={15} />
+          {showAdd ? '收起' : '新建作品'}
         </button>
       </div>
 
       <div className="status-strip">
         <span className={`dot ${backendOk ? 'dot-ok' : 'dot-err'}`} />
-        <span className="muted">后端 {backendOk ? '运行中' : '未连接'}</span>
+        <span className="text-secondary">后端 {backendOk ? '运行中' : '未连接'}</span>
+        <span className="sep" />
         <span className={`dot ${dbOk ? 'dot-ok' : 'dot-err'}`} />
-        <span className="muted">数据库 {dbOk ? '正常' : '未就绪'}</span>
+        <span className="text-secondary">数据库 {dbOk ? '正常' : '未就绪'}</span>
       </div>
 
       {showAdd && (
@@ -110,7 +116,12 @@ export function WorkspacePanel() {
       {isLoading ? (
         <p className="muted">加载中…</p>
       ) : novels.length === 0 ? (
-        <div className="empty">还没有作品，点击「新建作品」开始创作</div>
+        <div className="empty">
+          <div className="empty-icon">
+            <Library />
+          </div>
+          <p className="muted">还没有作品，点击「新建作品」开始创作</p>
+        </div>
       ) : (
         <div className="novel-grid">
           {novels.map((n) => (

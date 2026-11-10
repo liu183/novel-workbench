@@ -1,3 +1,13 @@
+import {
+  Library,
+  ScanSearch,
+  PenLine,
+  Bot,
+  BookOpen,
+  Activity,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import { useAppStore, type ModuleId } from './stores/app';
 import { RuntimePanel } from './features/runtime/RuntimePanel';
 import { WorkspacePanel } from './features/workspace/WorkspacePanel';
@@ -7,15 +17,16 @@ interface NavItem {
   id: ModuleId;
   label: string;
   desc: string;
+  icon: LucideIcon;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'workspace', label: '工作区', desc: '作品与项目管理' },
-  { id: 'deconstruct', label: '拆文工作台', desc: '书名搜索下载 · 结构文风拆解' },
-  { id: 'writing', label: '创作工作台', desc: '设定 · 蓝图 · 正文 · 审稿' },
-  { id: 'runtime', label: 'AI 运行时', desc: '本地扫描 · 远程接入' },
-  { id: 'knowledge', label: '知识库', desc: '参考资料 · 伏笔追踪' },
-  { id: 'tasks', label: '任务中心', desc: '流式输出 · 任务调度' },
+  { id: 'workspace', label: '工作区', desc: '作品与项目管理', icon: Library },
+  { id: 'deconstruct', label: '拆文工作台', desc: '书名搜索 · 结构拆解', icon: ScanSearch },
+  { id: 'writing', label: '创作工作台', desc: '蓝图 · 正文 · 审稿', icon: PenLine },
+  { id: 'runtime', label: 'AI 运行时', desc: '本地扫描 · 远程接入', icon: Bot },
+  { id: 'knowledge', label: '知识库', desc: '资料 · 伏笔追踪', icon: BookOpen },
+  { id: 'tasks', label: '任务中心', desc: '流式输出 · 调度', icon: Activity },
 ];
 
 const MODULE_DESC: Record<ModuleId, string> = {
@@ -29,11 +40,19 @@ const MODULE_DESC: Record<ModuleId, string> = {
 
 function ModulePlaceholder({ module }: { module: ModuleId }) {
   const item = NAV_ITEMS.find((n) => n.id === module);
+  const Icon = item?.icon ?? Sparkles;
   return (
-    <div className="card module-placeholder">
-      <h2>{item?.label}</h2>
-      <p className="muted">{MODULE_DESC[module]}</p>
-      <div className="placeholder-box">该模块将在后续里程碑中实现</div>
+    <div className="card">
+      <div className="empty" style={{ border: 'none', padding: '64px 32px' }}>
+        <div className="empty-icon">
+          <Icon />
+        </div>
+        <div>
+          <h2 style={{ margin: '0 0 6px' }}>{item?.label}</h2>
+          <p className="muted">{MODULE_DESC[module]}</p>
+        </div>
+        <span className="badge badge-type">后续里程碑实现</span>
+      </div>
     </div>
   );
 }
@@ -41,6 +60,7 @@ function ModulePlaceholder({ module }: { module: ModuleId }) {
 export default function App() {
   const activeModule = useAppStore((s) => s.activeModule);
   const setActiveModule = useAppStore((s) => s.setActiveModule);
+  const current = NAV_ITEMS.find((n) => n.id === activeModule);
 
   const renderContent = () => {
     switch (activeModule) {
@@ -62,30 +82,42 @@ export default function App() {
           <div className="brand-mark">N</div>
           <div>
             <div className="brand-name">小说创作工作台</div>
-            <div className="brand-sub">Novel Workbench</div>
+            <div className="brand-sub">NOVEL WORKBENCH</div>
           </div>
         </div>
 
         <nav className="nav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${activeModule === item.id ? 'active' : ''}`}
-              onClick={() => setActiveModule(item.id)}
-            >
-              <span className="nav-label">{item.label}</span>
-              <span className="nav-desc">{item.desc}</span>
-            </button>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const active = activeModule === item.id;
+            return (
+              <button
+                key={item.id}
+                className={`nav-item ${active ? 'active' : ''}`}
+                onClick={() => setActiveModule(item.id)}
+              >
+                <Icon className="nav-icon" />
+                <span className="nav-text">
+                  <span className="nav-label">{item.label}</span>
+                  <span className="nav-desc">{item.desc}</span>
+                </span>
+              </button>
+            );
+          })}
         </nav>
 
-        <div className="sidebar-footer muted">v0.3.0 · M3 工作区与创作</div>
+        <div className="sidebar-footer">
+          <Sparkles size={13} />
+          v0.3.0 · M3 工作区与创作
+        </div>
       </aside>
 
       <div className="main">
         <header className="topbar">
-          <h1>{NAV_ITEMS.find((n) => n.id === activeModule)?.label}</h1>
-          <span className="muted">小说创作与拆文工作台</span>
+          <div className="topbar-left">
+            <h1>{current?.label}</h1>
+            <span className="topbar-sub">小说创作与拆文工作台</span>
+          </div>
         </header>
 
         <main className="content">{renderContent()}</main>

@@ -1,17 +1,25 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, RefreshCw, Cpu, Terminal, Server, Bot } from 'lucide-react';
 import {
   fetchRuntimes,
   scanRuntimes,
   addRuntime,
   type AgentRuntimeInfo,
   type RuntimeStatus,
+  type RuntimeType,
 } from '../../lib/api';
 
-const TYPE_LABEL: Record<string, string> = {
+const TYPE_LABEL: Record<RuntimeType, string> = {
   llm: '模型服务',
   'agent-cli': 'Agent CLI',
   remote: '远程服务',
+};
+
+const TYPE_ICON: Record<RuntimeType, typeof Cpu> = {
+  llm: Cpu,
+  'agent-cli': Terminal,
+  remote: Server,
 };
 
 const STATUS_META: Record<RuntimeStatus, { label: string; className: string }> = {
@@ -33,17 +41,23 @@ const CAPABILITY_LABEL: Record<string, string> = {
 
 function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
   const status = STATUS_META[runtime.status] ?? STATUS_META.error;
+  const Icon = TYPE_ICON[runtime.type] ?? Bot;
 
   return (
     <div className="card runtime-card">
       <div className="runtime-card-head">
-        <div className="runtime-name">{runtime.name}</div>
+        <div className="runtime-name">
+          <span className="runtime-icon">
+            <Icon />
+          </span>
+          {runtime.name}
+        </div>
         <span className={`badge ${status.className}`}>{status.label}</span>
       </div>
 
       <div className="runtime-meta">
         <span className="badge badge-type">{TYPE_LABEL[runtime.type] ?? runtime.type}</span>
-        <span className="muted">{runtime.provider}</span>
+        <span>{runtime.provider}</span>
       </div>
 
       {runtime.baseUrl && <div className="runtime-url">{runtime.baseUrl}</div>}
@@ -52,13 +66,18 @@ function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
       {runtime.capabilities.length > 0 && (
         <div className="capability-tags">
           {runtime.capabilities.map((c) => (
-            <span key={c} className="capability-tag">{CAPABILITY_LABEL[c] ?? c}</span>
+            <span key={c} className="capability-tag">
+              {CAPABILITY_LABEL[c] ?? c}
+            </span>
           ))}
         </div>
       )}
 
       {runtime.health && (
-        <div className="runtime-health muted">响应延迟 {runtime.health.latencyMs}ms</div>
+        <div className="runtime-health">
+          <span className={`dot ${runtime.health.latencyMs < 1000 ? 'dot-ok' : 'dot-err'}`} />
+          响应 {runtime.health.latencyMs}ms
+        </div>
       )}
 
       {runtime.models.length > 0 && (
@@ -66,7 +85,9 @@ function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
           <div className="muted">可用模型（{runtime.models.length}）</div>
           <div className="model-list">
             {runtime.models.slice(0, 5).map((m) => (
-              <span key={m} className="model-chip">{m}</span>
+              <span key={m} className="model-chip">
+                {m}
+              </span>
             ))}
             {runtime.models.length > 5 && (
               <span className="muted">+{runtime.models.length - 5}</span>
@@ -75,7 +96,7 @@ function RuntimeCard({ runtime }: { runtime: AgentRuntimeInfo }) {
         </div>
       )}
 
-      {runtime.error && <div className="runtime-error muted">{runtime.error}</div>}
+      {runtime.error && <div className="runtime-error">{runtime.error}</div>}
     </div>
   );
 }
@@ -132,17 +153,19 @@ export function RuntimePanel() {
 
   return (
     <div className="runtime-panel">
-      <div className="runtime-toolbar">
+      <div className="panel-toolbar">
         <div>
           <h2>AI 运行时</h2>
           <p className="muted">自动扫描本地 Agent Runtime，或接入远程服务</p>
         </div>
         <div className="toolbar-actions">
-          <button className="btn" onClick={handleScan} disabled={scanning}>
-            {scanning ? '扫描中…' : '重新扫描'}
-          </button>
           <button className="btn btn-ghost" onClick={() => setShowAdd((v) => !v)}>
+            <Plus size={15} />
             {showAdd ? '取消' : '添加远程服务'}
+          </button>
+          <button className="btn" onClick={handleScan} disabled={scanning}>
+            <RefreshCw size={15} className={scanning ? 'spin' : undefined} />
+            {scanning ? '扫描中…' : '重新扫描'}
           </button>
         </div>
       </div>
@@ -172,7 +195,12 @@ export function RuntimePanel() {
       {isLoading ? (
         <p className="muted">加载中…</p>
       ) : runtimes.length === 0 ? (
-        <div className="empty">尚未发现任何运行时，点击「重新扫描」检测本地服务</div>
+        <div className="empty">
+          <div className="empty-icon">
+            <Bot />
+          </div>
+          <p className="muted">尚未发现任何运行时，点击「重新扫描」检测本地服务</p>
+        </div>
       ) : (
         <div className="runtime-grid">
           {runtimes.map((r) => (
