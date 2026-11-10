@@ -4,6 +4,24 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-10
+
+### Added
+
+- **M3 工作区与创作工作台**：
+  - SQLite 持久化：`novel` / `chapter` 表结构（章节蓝图字段合并进 chapter）。
+  - 领域服务：作品（CRUD）、章节（CRUD + 自动排序 + 蓝图）。
+  - 写稿服务：组装 prompt → 调用可用 Runtime（llm / remote）→ 保存正文。
+  - REST 路由：作品 `/api/novels`、章节 `/api/novels/:id/chapters`、写稿 `/api/chapters/:id/write`（SSE 流式）。
+  - 前端「工作区」面板：作品列表 + 新建 + 系统状态条。
+  - 前端「创作工作台」面板：作品详情 + 章节列表 + 蓝图 + AI 写稿（流式展示）。
+- 单元测试：作品 / 章节服务 2 例。
+
+### Fixed
+
+- 修复 `SELECT *` 返回 snake_case 列名导致的字段映射错误（改用 SQL 别名映射 camelCase）。
+- 修复 `cast` 为 SQL 关键字导致的语法错误（加双引号引用列名）。
+
 ## [0.2.0] - 2026-11-10
 
 ### Added

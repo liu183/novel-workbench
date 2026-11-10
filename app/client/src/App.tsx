@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useAppStore, type ModuleId } from './stores/app';
-import { fetchHealth, fetchDbHealth } from './lib/api';
 import { RuntimePanel } from './features/runtime/RuntimePanel';
+import { WorkspacePanel } from './features/workspace/WorkspacePanel';
+import { WritingPanel } from './features/writing/WritingPanel';
 
 interface NavItem {
   id: ModuleId;
@@ -28,84 +27,6 @@ const MODULE_DESC: Record<ModuleId, string> = {
   tasks: '查看进行中 / 历史 / 诊断任务，实时流式输出，支持取消与暂停。',
 };
 
-function StreamDemo() {
-  const [events, setEvents] = useState<string[]>([]);
-  const [running, setRunning] = useState(false);
-
-  const start = () => {
-    setEvents([]);
-    setRunning(true);
-    const es = new EventSource('/api/stream/demo');
-
-    es.addEventListener('message', (e) => {
-      const parsed = JSON.parse(e.data) as { count: number; message: string };
-      setEvents((prev) => [...prev, parsed.message]);
-    });
-
-    es.addEventListener('error', () => {
-      setRunning(false);
-      es.close();
-    });
-  };
-
-  return (
-    <div className="card">
-      <div className="card-header">
-        <div>
-          <h3>SSE 流式通道演示</h3>
-          <p className="muted">验证前后端流式通信（后端每秒推送一条消息）</p>
-        </div>
-        <button className="btn" onClick={start} disabled={running}>
-          {running ? '接收中…' : '开始接收'}
-        </button>
-      </div>
-      <div className="stream-log">
-        {events.length === 0 ? (
-          <span className="muted">点击「开始接收」查看后端推送</span>
-        ) : (
-          events.map((msg, i) => <div key={i} className="stream-line">▸ {msg}</div>)
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Dashboard() {
-  const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth });
-  const dbHealth = useQuery({ queryKey: ['health', 'db'], queryFn: fetchDbHealth });
-
-  const backendOk = health.data?.ok === true;
-  const dbOk = dbHealth.data?.ok === true;
-
-  return (
-    <div className="grid">
-      <div className="card status-card">
-        <div className="card-header">
-          <h3>系统状态</h3>
-        </div>
-        <div className="status-row">
-          <span className={`dot ${backendOk ? 'dot-ok' : 'dot-err'}`} />
-          <div>
-            <div className="status-label">后端服务</div>
-            <div className="muted">
-              {backendOk ? `v${health.data?.version} 运行中` : '未连接（请启动 pnpm dev:server）'}
-            </div>
-          </div>
-        </div>
-        <div className="status-row">
-          <span className={`dot ${dbOk ? 'dot-ok' : 'dot-err'}`} />
-          <div>
-            <div className="status-label">SQLite 数据库</div>
-            <div className="muted">{dbOk ? '连接正常' : '未就绪'}</div>
-          </div>
-        </div>
-      </div>
-
-      <StreamDemo />
-    </div>
-  );
-}
-
 function ModulePlaceholder({ module }: { module: ModuleId }) {
   const item = NAV_ITEMS.find((n) => n.id === module);
   return (
@@ -120,6 +41,19 @@ function ModulePlaceholder({ module }: { module: ModuleId }) {
 export default function App() {
   const activeModule = useAppStore((s) => s.activeModule);
   const setActiveModule = useAppStore((s) => s.setActiveModule);
+
+  const renderContent = () => {
+    switch (activeModule) {
+      case 'workspace':
+        return <WorkspacePanel />;
+      case 'runtime':
+        return <RuntimePanel />;
+      case 'writing':
+        return <WritingPanel />;
+      default:
+        return <ModulePlaceholder module={activeModule} />;
+    }
+  };
 
   return (
     <div className="app">
@@ -145,7 +79,7 @@ export default function App() {
           ))}
         </nav>
 
-        <div className="sidebar-footer muted">v0.1.0 · M1 工程骨架</div>
+        <div className="sidebar-footer muted">v0.3.0 · M3 工作区与创作</div>
       </aside>
 
       <div className="main">
@@ -154,15 +88,7 @@ export default function App() {
           <span className="muted">小说创作与拆文工作台</span>
         </header>
 
-        <main className="content">
-          {activeModule === 'workspace' ? (
-            <Dashboard />
-          ) : activeModule === 'runtime' ? (
-            <RuntimePanel />
-          ) : (
-            <ModulePlaceholder module={activeModule} />
-          )}
-        </main>
+        <main className="content">{renderContent()}</main>
       </div>
     </div>
   );

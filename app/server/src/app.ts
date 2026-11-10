@@ -3,6 +3,9 @@ import cors from '@fastify/cors';
 import type { AppDeps } from './types.js';
 import { initSSE } from './sse.js';
 import { registerRuntimeRoutes } from './api/runtimes.routes.js';
+import { registerNovelRoutes } from './api/novels.routes.js';
+import { registerChapterRoutes } from './api/chapters.routes.js';
+import { registerWritingRoutes } from './api/writing.routes.js';
 
 /**
  * 构建 Fastify 应用实例，注册插件与路由。
@@ -49,6 +52,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
 
   // AI Agent Runtime 抽象层路由（M2）
   await registerRuntimeRoutes(app);
+
+  // 工作区与创作路由（M3）
+  await registerNovelRoutes(app);
+  await registerChapterRoutes(app);
+  await registerWritingRoutes(app);
 
   return app;
 }
