@@ -214,3 +214,145 @@ function parseSSEEvent(raw: string): WriteEvent | null {
   const data = JSON.parse(dataLines.join('\n')) as Record<string, unknown>;
   return { type: eventName as WriteEvent['type'], ...data };
 }
+
+// ===== 拆文工作台（M4） =====
+
+export interface BookSourceInfo {
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+}
+
+export interface BookResult {
+  id: string;
+  title: string;
+  author: string;
+  source: string;
+  provider: string;
+  cover?: string;
+  intro?: string;
+  formats: string[];
+  detailUrl?: string;
+}
+
+export interface DeconstructSource {
+  id: string;
+  title: string;
+  author?: string;
+  source: string;
+  format: string;
+  filePath: string;
+  wordCount: number;
+  status: string;
+  createdAt: number;
+}
+
+export interface ChapterStat {
+  title: string;
+  chars: number;
+  paragraphCount: number;
+}
+
+export interface WordFreq {
+  word: string;
+  count: number;
+}
+
+export interface AnalysisResult {
+  title: string;
+  totalChars: number;
+  chapterCount: number;
+  paragraphCount: number;
+  avgChapterChars: number;
+  dialogueRatio: number;
+  avgSentenceLength: number;
+  maxSentenceLength: number;
+  chapters: ChapterStat[];
+  rhythm: number[];
+  topWords: WordFreq[];
+  sentenceDist: { short: number; medium: number; long: number };
+  aiEnhanced: boolean;
+  aiSummary?: string;
+  generatedAt: number;
+}
+
+export interface DeconstructReport {
+  id: string;
+  sourceId: string;
+  title: string;
+  analysis: AnalysisResult;
+  createdAt: number;
+}
+
+export async function fetchBookSources(): Promise<BookSourceInfo[]> {
+  const res = await fetch('/api/books/sources');
+  return (await res.json()).sources;
+}
+
+export async function searchBooks(
+  query: string,
+): Promise<{ ok: boolean; results: BookResult[]; notice?: string; error?: string }> {
+  const res = await fetch('/api/books/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  return res.json();
+}
+
+export async function downloadBook(
+  bookId: string,
+): Promise<{ ok: boolean; source?: DeconstructSource; error?: string }> {
+  const res = await fetch('/api/books/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bookId }),
+  });
+  return res.json();
+}
+
+export async function importBookText(input: {
+  title: string;
+  author?: string;
+  content: string;
+}): Promise<{ ok: boolean; source?: DeconstructSource; error?: string }> {
+  const res = await fetch('/api/books/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return res.json();
+}
+
+export async function fetchDeconstructSources(): Promise<DeconstructSource[]> {
+  const res = await fetch('/api/deconstruct/sources');
+  return (await res.json()).sources;
+}
+
+export async function analyzeDeconstruct(
+  sourceId: string,
+): Promise<{ ok: boolean; report?: DeconstructReport; error?: string }> {
+  const res = await fetch('/api/deconstruct/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceId }),
+  });
+  return res.json();
+}
+
+export async function fetchReports(): Promise<DeconstructReport[]> {
+  const res = await fetch('/api/deconstruct/reports');
+  return (await res.json()).reports;
+}
+
+export async function convertReport(
+  reportId: string,
+): Promise<{ ok: boolean; novel?: Novel; error?: string }> {
+  const res = await fetch(`/api/deconstruct/reports/${reportId}/convert`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  return res.json();
+}

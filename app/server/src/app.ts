@@ -6,6 +6,8 @@ import { registerRuntimeRoutes } from './api/runtimes.routes.js';
 import { registerNovelRoutes } from './api/novels.routes.js';
 import { registerChapterRoutes } from './api/chapters.routes.js';
 import { registerWritingRoutes } from './api/writing.routes.js';
+import { registerBooksRoutes } from './api/books.routes.js';
+import { registerDeconstructRoutes } from './api/deconstruct.routes.js';
 
 /**
  * 构建 Fastify 应用实例，注册插件与路由。
@@ -57,6 +59,10 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await registerNovelRoutes(app);
   await registerChapterRoutes(app);
   await registerWritingRoutes(app);
+
+  // 拆文工作台路由（M4）
+  await registerBooksRoutes(app);
+  await registerDeconstructRoutes(app);
 
   return app;
 }

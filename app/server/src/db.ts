@@ -4,6 +4,7 @@ import type { AppConfig, SqliteDatabase } from './types.js';
 import { initSchema } from './schema.js';
 
 let dbInstance: SqliteDatabase | null = null;
+let dataDirCache: string | null = null;
 
 /**
  * 初始化 SQLite 数据库：创建数据目录、建表，并缓存为进程级单例。
@@ -17,6 +18,7 @@ export function initDatabase(config: AppConfig): SqliteDatabase {
 
   initSchema(db);
   dbInstance = db;
+  dataDirCache = config.dataDir;
 
   return db;
 }
@@ -25,4 +27,10 @@ export function initDatabase(config: AppConfig): SqliteDatabase {
 export function getDb(): SqliteDatabase {
   if (!dbInstance) throw new Error('数据库未初始化，请先调用 initDatabase');
   return dbInstance;
+}
+
+/** 获取运行时数据目录（素材文件等）。 */
+export function getDataDir(): string {
+  if (!dataDirCache) throw new Error('数据库未初始化，请先调用 initDatabase');
+  return dataDirCache;
 }

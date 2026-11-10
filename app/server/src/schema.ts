@@ -39,5 +39,42 @@ export function initSchema(db: SqliteDatabase): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_chapter_novel ON chapter(novel_id, seq);
+
+    -- 书源（可配置的搜索下载源）
+    CREATE TABLE IF NOT EXISTS book_source (
+      id          TEXT PRIMARY KEY,
+      name        TEXT,
+      type        TEXT,
+      provider    TEXT,
+      config      TEXT,
+      priority    INTEGER,
+      enabled     INTEGER DEFAULT 1,
+      created_at  INTEGER
+    );
+
+    -- 拆文素材（已下载书目 / 手动导入文本）
+    CREATE TABLE IF NOT EXISTS deconstruct_source (
+      id          TEXT PRIMARY KEY,
+      title       TEXT,
+      author      TEXT,
+      source      TEXT,
+      format      TEXT,
+      file_path   TEXT,
+      word_count  INTEGER,
+      status      TEXT,
+      meta        TEXT,
+      created_at  INTEGER
+    );
+
+    -- 拆文报告（分析结果 JSON）
+    CREATE TABLE IF NOT EXISTS deconstruct_report (
+      id          TEXT PRIMARY KEY,
+      source_id   TEXT,
+      title       TEXT,
+      analysis    TEXT,
+      created_at  INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_report_source ON deconstruct_report(source_id);
   `);
 }

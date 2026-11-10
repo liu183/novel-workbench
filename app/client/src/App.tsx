@@ -12,6 +12,7 @@ import { useAppStore, type ModuleId } from './stores/app';
 import { RuntimePanel } from './features/runtime/RuntimePanel';
 import { WorkspacePanel } from './features/workspace/WorkspacePanel';
 import { WritingPanel } from './features/writing/WritingPanel';
+import { DeconstructPanel } from './features/deconstruct/DeconstructPanel';
 
 interface NavItem {
   id: ModuleId;
@@ -70,6 +71,8 @@ export default function App() {
         return <RuntimePanel />;
       case 'writing':
         return <WritingPanel />;
+      case 'deconstruct':
+        return <DeconstructPanel />;
       default:
         return <ModulePlaceholder module={activeModule} />;
     }
@@ -108,7 +111,7 @@ export default function App() {
 
         <div className="sidebar-footer">
           <Sparkles size={13} />
-          v0.3.0 · M3 工作区与创作
+          v0.4.0 · M4 拆文工作台
         </div>
       </aside>
 
